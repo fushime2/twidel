@@ -2,12 +2,20 @@ package main
 
 import (
 	"bufio"
+	"flag"
 	"fmt"
 	"net/url"
 	"os"
 	"strconv"
 
 	"github.com/ChimeraCoder/anaconda"
+)
+
+var (
+	limit   int
+	minfav  int
+	minrt   int
+	dbgflag bool
 )
 
 func getLines(fname string) ([]string, error) {
@@ -62,31 +70,37 @@ func authenticate() {
 }
 
 func test() {
-	fmt.Println("0")
+	fmt.Println(limit, minfav, minrt, dbgflag)
+}
+
+func init() {
+	// Set flags
+	INF := 114514
+	flag.IntVar(&limit, "limit", 3200, "Limit of number to delete tweets")
+	flag.IntVar(&minfav, "minfav", INF, "Delete tweet less than minfav")
+	flag.IntVar(&minrt, "minrt", INF, "Delete tweet less than minrt")
+	flag.BoolVar(&dbgflag, "dbg", false, "Debug mode on if dbg=true")
+
+	flag.Parse()
 }
 
 func main() {
-	dbgflag := false
 	if dbgflag {
 		fmt.Println("Debug mode ON!")
 		test()
 		return
 	}
 
-	info, err := getLines("oauth.txt")
-	if err != nil {
-		panic(err)
-	}
-
-	anaconda.SetConsumerKey(info[0])
-	anaconda.SetConsumerSecret(info[1])
-	api := anaconda.NewTwitterApi(info[2], info[3])
+	api := getApi()
 
 	// Delete user's tweets (up to 3200)
-	LIM := 16
+	LIM := limit / 200
 	v := url.Values{}
 	v.Set("count", "200")
 	for page := 1; page <= LIM; page++ {
+		if page == LIM {
+			v.Set("count", strconv.Itoa(limit%200))
+		}
 		v.Set("page", strconv.Itoa(page))
 		timeline, err := api.GetUserTimeline(v)
 		if err != nil {
@@ -100,11 +114,16 @@ func main() {
 		}
 
 		for _, tweet := range timeline {
+			if tweet.FavoriteCount >= minfav || tweet.RetweetCount >= minrt {
+				continue
+			}
 			t, err := api.DeleteTweet(tweet.Id, false)
 			if err != nil {
 				panic(err)
 			}
-			fmt.Println(t.Text)
+			if dbgflag {
+				fmt.Println(t.Text)
+			}
 		}
 	}
 
