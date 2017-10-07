@@ -70,7 +70,7 @@ func authenticate() {
 }
 
 func test() {
-	fmt.Println(limit, minfav, minrt, dbgflag)
+	fmt.Printf("%v", 114514)
 }
 
 func init() {
@@ -94,6 +94,7 @@ func main() {
 	api := getApi()
 
 	// Delete user's tweets (up to 3200)
+	deleted := 0
 	LIM := limit / 200
 	v := url.Values{}
 	v.Set("count", "200")
@@ -124,8 +125,10 @@ func main() {
 			if dbgflag {
 				fmt.Println(t.Text)
 			}
+			deleted++
 		}
 	}
 
+	fmt.Printf("Deleted %v tweets\n", deleted)
 	fmt.Println("Done")
 }
