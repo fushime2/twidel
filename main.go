@@ -125,6 +125,17 @@ func main() {
 	}
 
 	api := getApi(targetAccount)
+	for {
+		fmt.Println("Are you sure you want to delete your tweets? (y/n)")
+		var yn string
+		fmt.Scan(&yn)
+		if yn == "n" || yn == "N" {
+			os.Exit(0)
+		} else if yn == "y" || yn == "Y" {
+			fmt.Println("Start to delete tweets.")
+			break
+		}
+	}
 
 	// Delete user's tweets (up to 3200)
 	deleted := 0
