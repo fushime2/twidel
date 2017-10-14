@@ -1,14 +1,20 @@
 package main
 
 import (
-	"bufio"
+	"encoding/json"
 	"flag"
 	"fmt"
+	"io/ioutil"
 	"net/url"
 	"os"
 	"strconv"
 
 	"github.com/ChimeraCoder/anaconda"
+)
+
+const (
+	consumerKey    string = "xWWfPWcsN1GNHXZY5R8w7zjzK"
+	consumerSecret string = "tcakFXM8oR2BXBY61pFpNysybSV7VlL8pDMpCMboNOriMgYtn1"
 )
 
 var (
@@ -18,59 +24,68 @@ var (
 	dbgflag bool
 )
 
-func getLines(fname string) ([]string, error) {
-	fp, err := os.Open(fname)
-	if err != nil {
-		panic(err)
-	}
-	defer fp.Close()
-	scanner := bufio.NewScanner(fp)
-	var lines []string
-	for scanner.Scan() {
-		line := scanner.Text()
-		lines = append(lines, line)
-	}
-	return lines, nil
+type Configuration struct {
+	AccessToken       string `json:"access_token"`
+	AccessTokenSecret string `json:"access_token_secret"`
 }
 
-func getApi() *anaconda.TwitterApi {
-	info, err := getLines("oauth.txt")
-	if err != nil {
-		panic(err)
-	}
-	anaconda.SetConsumerKey(info[0])
-	anaconda.SetConsumerSecret(info[1])
-	return anaconda.NewTwitterApi(info[2], info[3])
+func getSettingFileName(target string) string {
+	return fmt.Sprintf("./setting/%s_setting.json", target)
 }
 
-func authenticate() {
-	info, err := getLines("oauth.txt")
+func getApi(target string) *anaconda.TwitterApi {
+	filename := getSettingFileName(target)
+	b, err := ioutil.ReadFile(filename)
 	if err != nil {
 		panic(err)
 	}
-	anaconda.SetConsumerKey(info[0])
-	anaconda.SetConsumerSecret(info[1])
+	var conf Configuration
+	if err := json.Unmarshal(b, &conf); err != nil {
+		panic(err)
+	}
+	anaconda.SetConsumerKey(consumerKey)
+	anaconda.SetConsumerSecret(consumerSecret)
+	return anaconda.NewTwitterApi(conf.AccessToken, conf.AccessTokenSecret)
+}
+
+// Write access token and secret to json file.
+func authenticate(target string) {
+	anaconda.SetConsumerKey(consumerKey)
+	anaconda.SetConsumerSecret(consumerSecret)
 	url, token, err := anaconda.AuthorizationURL("")
 	if err != nil {
 		panic(err)
 	}
+	fmt.Println("Access url and log in to get PIN code.")
 	fmt.Println(url)
-	fmt.Println(token.Token, token.Secret)
 
 	var verifier string
 	fmt.Print("Input PIN Code: ")
 	fmt.Scan(&verifier)
 	token, val, err := anaconda.GetCredentials(token, verifier)
-	fmt.Println(token)
-	fmt.Println(val)
 	if err != nil {
 		panic(err)
 	}
-	//api := anaconda.NewTwitterApi(token.Token, token.Secret)
+	fmt.Println(token)
+	fmt.Println(val)
+
+	outjson, err := json.MarshalIndent(token, "", "\t")
+	if err != nil {
+		panic(err)
+	}
+	filename := fmt.Sprintf("./setting/%s_setting.json", target)
+	err = ioutil.WriteFile(filename, outjson, 0644)
+	if err != nil {
+		panic(err)
+	}
 }
 
-func test() {
-	fmt.Printf("%v", 114514)
+
+func isAuthenticated(target string) bool {
+	// Return true if (target)_setting.json exists.
+	filename := getSettingFileName(target)
+	_, err := os.Stat(filename)
+	return err == nil
 }
 
 func init() {
@@ -80,18 +95,34 @@ func init() {
 	flag.IntVar(&minfav, "minfav", INF, "Delete tweet less than minfav")
 	flag.IntVar(&minrt, "minrt", INF, "Delete tweet less than minrt")
 	flag.BoolVar(&dbgflag, "dbg", false, "Debug mode on if dbg=true")
-
 	flag.Parse()
 }
 
 func main() {
 	if dbgflag {
 		fmt.Println("Debug mode ON!")
-		test()
-		return
 	}
 
-	api := getApi()
+	var twitterAccount [2]string
+	fmt.Println("In order to avoid mis-execution, 2 times input your twitter account that you want to target.")
+	for i := 0; i < 2; i++ {
+		fmt.Printf("(%v/2): ", i+1)
+		_, err := fmt.Scan(&twitterAccount[i])
+		if err != nil {
+			panic(err)
+		}
+	}
+	if twitterAccount[0] != twitterAccount[1] {
+		fmt.Println("Error: Inputted id is mistaken.")
+		os.Exit(0)
+	}
+
+	targetAccount := twitterAccount[0]
+	if !isAuthenticated(targetAccount) {
+		authenticate(targetAccount)
+	}
+
+	api := getApi(targetAccount)
 
 	// Delete user's tweets (up to 3200)
 	deleted := 0
