@@ -63,18 +63,20 @@ func authenticate(target string) {
 	var verifier string
 	fmt.Print("Input PIN Code: ")
 	fmt.Scan(&verifier)
-	token, val, err := anaconda.GetCredentials(token, verifier)
+	t, _, err := anaconda.GetCredentials(token, verifier)
 	if err != nil {
 		panic(err)
 	}
-	fmt.Println(token)
-	fmt.Println(val)
 
-	outjson, err := json.MarshalIndent(token, "", "\t")
+	conf := Configuration{
+		AccessToken:       t.Token,
+		AccessTokenSecret: t.Secret,
+	}
+	outjson, err := json.MarshalIndent(conf, "", "\t")
 	if err != nil {
 		panic(err)
 	}
-	filename := fmt.Sprintf("./setting/%s_setting.json", target)
+	filename := getSettingFileName(target)
 	err = ioutil.WriteFile(filename, outjson, 0644)
 	if err != nil {
 		panic(err)
@@ -157,9 +159,9 @@ func main() {
 				fmt.Println(t.Text)
 			}
 			deleted++
-			if deleted%200 == 0 {
+			if deleted%100 == 0 {
 				fmt.Printf("Deleted %v tweets\n", deleted)
-				time.Sleep(5 * time.Second)
+				time.Sleep(10 * time.Second)
 			}
 		}
 	}
