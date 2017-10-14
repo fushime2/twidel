@@ -8,6 +8,7 @@ import (
 	"net/url"
 	"os"
 	"strconv"
+	"time"
 
 	"github.com/ChimeraCoder/anaconda"
 )
@@ -79,7 +80,6 @@ func authenticate(target string) {
 		panic(err)
 	}
 }
-
 
 func isAuthenticated(target string) bool {
 	// Return true if (target)_setting.json exists.
@@ -157,6 +157,10 @@ func main() {
 				fmt.Println(t.Text)
 			}
 			deleted++
+			if deleted%200 == 0 {
+				fmt.Printf("Deleted %v tweets\n", deleted)
+				time.Sleep(5 * time.Second)
+			}
 		}
 	}
 
