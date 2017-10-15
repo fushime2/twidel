@@ -7,6 +7,8 @@ import (
 	"io/ioutil"
 	"net/url"
 	"os"
+	"path/filepath"
+	"runtime"
 	"strconv"
 	"time"
 
@@ -31,7 +33,20 @@ type Configuration struct {
 }
 
 func getSettingFileName(target string) string {
-	return fmt.Sprintf("./setting/%s_setting.json", target)
+	dir := os.Getenv("HOME")
+	if dir == "" && runtime.GOOS == "windows" {
+		dir = os.Getenv("APPDATA")
+		if dir == "" {
+			dir = filepath.Join(os.Getenv("USERPROFILE"), "Application Data", "twidel")
+		}
+		dir = filepath.Join(dir, "twidel")
+	} else {
+		dir = filepath.Join(dir, ".config", "twidel")
+	}
+	if err := os.MkdirAll(dir, 0700); err != nil {
+		panic(err)
+	}
+	return filepath.Join(dir, "setting", target+"_setting.json")
 }
 
 func getApi(target string) *anaconda.TwitterApi {
@@ -126,13 +141,13 @@ func main() {
 
 	api := getApi(targetAccount)
 	for {
-		fmt.Println("Are you sure you want to delete your tweets? (y/n)")
+		fmt.Print("Are you sure you want to delete your tweets? (y/n): ")
 		var yn string
 		fmt.Scan(&yn)
 		if yn == "n" || yn == "N" {
 			os.Exit(0)
 		} else if yn == "y" || yn == "Y" {
-			fmt.Println("Start to delete tweets.")
+			fmt.Println("Start to delete tweets...")
 			break
 		}
 	}
