@@ -46,7 +46,7 @@ func getSettingFileName(target string) string {
 	if err := os.MkdirAll(dir, 0700); err != nil {
 		panic(err)
 	}
-	return filepath.Join(dir, "setting", target+"_setting.json")
+	return filepath.Join(dir, target+"_setting.json")
 }
 
 func getApi(target string) *anaconda.TwitterApi {
