@@ -16,8 +16,8 @@ import (
 )
 
 const (
-	consumerKey    string = "xWWfPWcsN1GNHXZY5R8w7zjzK"
-	consumerSecret string = "tcakFXM8oR2BXBY61pFpNysybSV7VlL8pDMpCMboNOriMgYtn1"
+	consumerKey    string = "TIIdWkTGq9KtE2lEJZlngu45i"
+	consumerSecret string = "wSPphN2UPziOOJKwqfqHiXAKAYXR4usZunTbnYolqH7xyQZoxz"
 )
 
 var (
