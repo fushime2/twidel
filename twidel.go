@@ -8,7 +8,6 @@ import (
 	"net/url"
 	"os"
 	"path/filepath"
-	"runtime"
 	"strconv"
 	"time"
 
@@ -33,16 +32,11 @@ type Configuration struct {
 }
 
 func getSettingFileName(target string) string {
-	dir := os.Getenv("HOME")
-	if dir == "" && runtime.GOOS == "windows" {
-		dir = os.Getenv("APPDATA")
-		if dir == "" {
-			dir = filepath.Join(os.Getenv("USERPROFILE"), "Application Data", "twidel")
-		}
-		dir = filepath.Join(dir, "twidel")
-	} else {
-		dir = filepath.Join(dir, ".config", "twidel")
+	dir, err := os.Getwd() // current directory
+	if err != nil {
+		panic(err)
 	}
+	dir = filepath.Join(dir, "setting")
 	if err := os.MkdirAll(dir, 0700); err != nil {
 		panic(err)
 	}
