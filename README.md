@@ -6,8 +6,9 @@ A command line tool to delete your tweets.
 
 	# go run twidel.go [-options]
 
+Options are as follows:
+
 ```
-> twidel.exe --help
 Usage of twidel:
   -dbg
         Debug mode on if dbg=true
@@ -26,3 +27,7 @@ Usage of twidel:
 In this case, up to 1000 tweets that is favorited less than 10 and Retweeted less than 5 will be deleted.
 
 If you don't use any options, up to 3200 tweets will be deleted.
+
+## License
+
+MIT License
